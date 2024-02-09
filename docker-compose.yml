@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  webservice:
+    userns_mode: keep-id
+    image: mcr.microsoft.com/devcontainers/java:1-17-bullseye
+    command: sleep infinity
+    volumes:
+      - "./:/home/vscode/workspace/:z"
+      - ".vscode-server/:/home/vscode/.vscode-server/:z"
+      - ".m2/:/home/vscode/.m2/:z"
