@@ -16,6 +16,11 @@
       "installMaven": "true",
       "installGradle": "false"
     }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["DotJoshJohnson.xml", "redhat.fabric8-analytics"]
+    }
   }
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
