@@ -4,6 +4,6 @@ services:
   nativeimage:
     build:
       context: .
-      dockerfile: ms-bank.Dockerfile
+      dockerfile: nativeimage.Dockerfile
     ports:
       - 80:8888
