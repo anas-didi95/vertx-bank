@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  nativeimage:
+    build:
+      context: .
+      dockerfile: nativeimage.Dockerfile
+    ports:
+      - 80:8888
