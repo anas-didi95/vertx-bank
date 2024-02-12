@@ -1,0 +1,38 @@
+{
+	"info": {
+		"_postman_id": "411360d9-de5e-4d20-ac29-45836df93f90",
+		"name": "Vert.x Bank",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4253667",
+		"_collection_link": "https://red-star-263677.postman.co/workspace/maybank_home_assignment~9cd37d3a-0f01-4ce3-8032-204e8ed641ca/collection/4253667-411360d9-de5e-4d20-ac29-45836df93f90?action=share&source=collection_link&creator=4253667"
+	},
+	"item": [
+		{
+			"name": "Add Customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Anas Juwaidi\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{appUrl}}/cust/",
+					"host": [
+						"{{appUrl}}"
+					],
+					"path": [
+						"cust",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
