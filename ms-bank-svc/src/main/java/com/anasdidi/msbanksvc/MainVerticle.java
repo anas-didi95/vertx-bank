@@ -10,6 +10,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -39,6 +40,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private Router getRequestHandler(Promise<Void> startPromise) {
     Router router = Router.router(vertx);
+    router.route().handler(BodyHandler.create());
     verticleList.stream().filter(BaseVerticle::isRouterHandler)
         .forEach(a -> {
           try {

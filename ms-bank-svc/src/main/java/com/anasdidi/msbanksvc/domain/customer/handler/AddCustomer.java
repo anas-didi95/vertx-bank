@@ -1,5 +1,7 @@
 package com.anasdidi.msbanksvc.domain.customer.handler;
 
+import java.time.Instant;
+
 import com.anasdidi.common.BaseHandler;
 
 import io.vertx.core.http.HttpMethod;
@@ -10,12 +12,13 @@ public class AddCustomer extends BaseHandler {
 
   @Override
   protected void handle(RoutingContext ctx) {
-    sendResponse(ctx, new JsonObject().put("hello", "world").put("thank", "you"));
+    JsonObject reqBody = ctx.body().asJsonObject();
+    sendResponse(ctx, reqBody.put("dateCreated", Instant.now()));
   }
 
   @Override
   protected HttpMethod getHttpMethod() {
-    return HttpMethod.GET;
+    return HttpMethod.POST;
   }
 
   @Override
