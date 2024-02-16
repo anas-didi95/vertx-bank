@@ -53,7 +53,12 @@ public abstract class BaseVerticle extends AbstractVerticle {
         getHandlerList().stream()
             .peek(a -> logger.info("[setupRouter] {} httpMethod={}, path={}", getVerticleName(), a.getHttpMethod(),
                 a.getPath()))
-            .forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath()).handler(a::handle));
+            .forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath())
+                .handler(ctx -> {
+                  ctx.put(Constants.Context.DTO, a.validate(ctx));
+                  ctx.next();
+                })
+                .handler(a::handle));
         logger.info("[setupRouter] {} handler added", getVerticleName());
       }
       promise.complete();
