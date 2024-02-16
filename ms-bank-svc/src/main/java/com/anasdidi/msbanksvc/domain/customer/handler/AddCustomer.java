@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseHandler;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -14,6 +16,7 @@ public class AddCustomer extends BaseHandler {
   @Override
   protected void handle(RoutingContext ctx) {
     AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
+    System.out.println(JsonObject.mapFrom(dto).encode());
     sendResponse(ctx, new JsonObject().put("dateCreated", Instant.now()).put("newName", dto.name + "_new"));
   }
 
@@ -29,14 +32,14 @@ public class AddCustomer extends BaseHandler {
 
   @Override
   protected BaseDTO validate(RoutingContext ctx) {
-    JsonObject body = ctx.body().asJsonObject();
-    return new AddCustomerDTO(body.getString("name"));
+    return ctx.body().asJsonObject().mapTo(AddCustomerDTO.class);
   }
 
-  class AddCustomerDTO extends BaseDTO {
-    final String name;
+  static class AddCustomerDTO extends BaseDTO {
+    public final String name;
 
-    public AddCustomerDTO(String name) {
+    @JsonCreator
+    private AddCustomerDTO(@JsonProperty("name") String name) {
       if (name == null) {
         throw new RuntimeException("Name empty");
       }
