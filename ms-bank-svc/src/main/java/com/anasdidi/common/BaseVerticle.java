@@ -2,6 +2,9 @@ package com.anasdidi.common;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -9,11 +12,13 @@ import io.vertx.ext.web.Router;
 
 public abstract class BaseVerticle extends AbstractVerticle {
 
+  private final static Logger logger = LoggerFactory.getLogger(BaseVerticle.class);
+
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     setupRouter()
         .onSuccess(e -> {
-          System.out.println("Verticle started");
+          logger.info("[start] {} started", getVerticleName());
           startPromise.complete();
         })
         .onFailure(e -> startPromise.fail(e));
@@ -24,6 +29,8 @@ public abstract class BaseVerticle extends AbstractVerticle {
   protected abstract String getBaseURI();
 
   protected abstract List<BaseHandler> getHandlerList();
+
+  protected abstract String getVerticleName();
 
   public final String getSubRouterPath() throws Exception {
     if (getBaseURI() == null || getBaseURI().lastIndexOf("/*") != getBaseURI().length() - 2) {
@@ -39,10 +46,13 @@ public abstract class BaseVerticle extends AbstractVerticle {
   private final Future<Void> setupRouter() {
     return Future.future(promise -> {
       if (getHandlerList() == null) {
-        System.out.println("No handler added!");
+        logger.info("[setupRouter] {} no handler added", getVerticleName());
       } else {
-        getHandlerList().stream().forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath()).handler(a::handle));
-        System.out.println("[setupRouter] Completed");
+        getHandlerList().stream()
+            .peek(a -> logger.info("[setupRouter] {} httpMethod={}, path={}", getVerticleName(), a.getHttpMethod(),
+                a.getPath()))
+            .forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath()).handler(a::handle));
+        logger.info("[setupRouter] {} handler added", getVerticleName());
       }
       promise.complete();
     });

@@ -3,20 +3,26 @@ package com.anasdidi.msbanksvc;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.anasdidi.common.BaseVerticle;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
+  private final static Logger logger = LoggerFactory.getLogger(MainVerticle.class);
   private final List<BaseVerticle> verticleList;
 
   public MainVerticle() {
+    System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
     verticleList = Arrays.asList(new CustomerVerticle());
   }
 
@@ -28,7 +34,7 @@ public class MainVerticle extends AbstractVerticle {
           startPromise.fail(http.cause());
         }
 
-        System.out.println("HTTP server started on port 8888");
+        logger.info("HTTP server started on port 8888");
         startPromise.complete();
       });
     }).onFailure(res -> startPromise.fail(res));
