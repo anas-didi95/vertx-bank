@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.anasdidi.common.BaseVerticle;
+import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 
 import io.vertx.core.AbstractVerticle;

@@ -1,4 +1,4 @@
-package com.anasdidi.common;
+package com.anasdidi.msbanksvc.common;
 
 import java.util.List;
 

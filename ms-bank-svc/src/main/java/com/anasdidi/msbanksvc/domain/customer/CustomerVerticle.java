@@ -3,8 +3,8 @@ package com.anasdidi.msbanksvc.domain.customer;
 import java.util.Arrays;
 import java.util.List;
 
-import com.anasdidi.common.BaseHandler;
-import com.anasdidi.common.BaseVerticle;
+import com.anasdidi.msbanksvc.common.BaseHandler;
+import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.domain.customer.handler.AddCustomer;
 
 import io.vertx.ext.web.Router;
