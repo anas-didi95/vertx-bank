@@ -11,7 +11,9 @@
     </encoder>
   </appender>
 
-  <root level="DEBUG">
+  <logger name="com.anasdidi.msbanksvc" level="DEBUG"/>
+
+  <root level="INFO">
     <appender-ref ref="STDOUT"/>
   </root>
 </configuration>
