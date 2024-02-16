@@ -45,7 +45,9 @@ public abstract class BaseVerticle extends AbstractVerticle {
 
   private final Future<Void> setupRouter() {
     return Future.future(promise -> {
-      if (getHandlerList() == null) {
+      if (!isRouterHandler()) {
+        logger.info("[setupRouter] {} no router", getVerticleName());
+      } else if (getHandlerList() == null) {
         logger.info("[setupRouter] {} no handler added", getVerticleName());
       } else {
         getHandlerList().stream()

@@ -41,7 +41,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private List<Future<String>> deployVerticleList() {
-    return verticleList.stream().map(a -> vertx.deployVerticle(a)).toList();
+    return verticleList.stream().map(vertx::deployVerticle).toList();
   }
 
   private Router getRequestHandler(Promise<Void> startPromise) {
