@@ -2,6 +2,8 @@ package com.anasdidi.msbanksvc.domain.customer.handler;
 
 import java.time.Instant;
 
+import org.apache.commons.validator.GenericValidator;
+
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseHandler;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,7 +42,7 @@ public class AddCustomer extends BaseHandler {
 
     @JsonCreator
     private AddCustomerDTO(@JsonProperty("name") String name) {
-      if (name == null) {
+      if (GenericValidator.isBlankOrNull(name)) {
         throw new RuntimeException("Name empty");
       }
       this.name = name;
