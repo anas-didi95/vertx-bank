@@ -1,4 +1,4 @@
-package com.anasdidi.common;
+package com.anasdidi.msbanksvc.common;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;

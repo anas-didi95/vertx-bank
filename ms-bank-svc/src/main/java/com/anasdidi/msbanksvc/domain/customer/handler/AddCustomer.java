@@ -2,7 +2,7 @@ package com.anasdidi.msbanksvc.domain.customer.handler;
 
 import java.time.Instant;
 
-import com.anasdidi.common.BaseHandler;
+import com.anasdidi.msbanksvc.common.BaseHandler;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
