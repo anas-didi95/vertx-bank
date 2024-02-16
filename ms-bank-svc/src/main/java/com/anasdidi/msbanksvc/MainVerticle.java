@@ -13,6 +13,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.SLF4JLogDelegateFactory;
+import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
@@ -47,6 +48,12 @@ public class MainVerticle extends AbstractVerticle {
   private Router getRequestHandler(Promise<Void> startPromise) {
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
+    router.route().handler(ctx -> {
+      String traceId = VertxContextPRNG.current(vertx).nextString(6);
+      logger.debug("traceId={}", traceId);
+      ctx.put("traceId", traceId);
+      ctx.next();
+    });
     verticleList.stream().filter(BaseVerticle::isRouterHandler)
         .forEach(a -> {
           try {
