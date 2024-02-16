@@ -3,9 +3,21 @@ package com.anasdidi.common;
 import java.util.List;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.ext.web.Router;
 
 public abstract class BaseVerticle extends AbstractVerticle {
+
+  @Override
+  public void start(Promise<Void> startPromise) throws Exception {
+    setupRouter()
+        .onSuccess(e -> {
+          System.out.println("Verticle started");
+          startPromise.complete();
+        })
+        .onFailure(e -> startPromise.fail(e));
+  }
 
   public abstract Router getRouter();
 
@@ -24,11 +36,15 @@ public abstract class BaseVerticle extends AbstractVerticle {
     return getRouter() != null;
   }
 
-  protected final void setupRouter(Router router) {
-    if (getHandlerList() == null) {
-      System.out.println("No handler added!");
-      return;
-    }
-    getHandlerList().stream().forEach(a -> router.route(a.getHttpMethod(), a.getPath()).handler(a::handle));
+  private final Future<Void> setupRouter() {
+    return Future.future(promise -> {
+      if (getHandlerList() == null) {
+        System.out.println("No handler added!");
+      } else {
+        getHandlerList().stream().forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath()).handler(a::handle));
+        System.out.println("[setupRouter] Completed");
+      }
+      promise.complete();
+    });
   }
 }
