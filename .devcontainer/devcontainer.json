@@ -19,7 +19,7 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["DotJoshJohnson.xml", "redhat.fabric8-analytics"]
+      "extensions": ["redhat.fabric8-analytics", "redhat.vscode-xml"]
     }
   }
 
