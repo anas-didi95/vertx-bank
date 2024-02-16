@@ -33,4 +33,9 @@ public class CustomerVerticle extends BaseVerticle {
   protected List<BaseHandler> getHandlerList() {
     return handlerList;
   }
+
+  @Override
+  protected String getVerticleName() {
+    return this.getClass().getSimpleName();
+  }
 }
