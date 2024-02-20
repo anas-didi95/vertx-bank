@@ -13,6 +13,7 @@ import io.vertx.ext.web.Router;
 public abstract class BaseVerticle extends AbstractVerticle {
 
   private final static Logger logger = LoggerFactory.getLogger(BaseVerticle.class);
+  private Router router;
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -24,11 +25,11 @@ public abstract class BaseVerticle extends AbstractVerticle {
         .onFailure(e -> startPromise.fail(e));
   }
 
-  public abstract Router getRouter();
+  public abstract boolean hasRouter();
 
   protected abstract String getBaseURI();
 
-  protected abstract List<BaseRoute> getHandlerList();
+  protected abstract List<BaseRoute> getRouteList();
 
   protected abstract String getVerticleName();
 
@@ -39,26 +40,29 @@ public abstract class BaseVerticle extends AbstractVerticle {
     return getBaseURI();
   }
 
-  public final boolean hasRouter() {
-    return getRouter() != null;
-  }
-
   private final Future<Void> setupRouter() {
+    if (hasRouter() && router == null) {
+      router = Router.router(vertx);
+    }
+
     return Future.future(promise -> {
-      if (!hasRouter()) {
-        logger.info("[setupRouter] {} no router", getVerticleName());
-      } else if (getHandlerList() == null) {
-        logger.info("[setupRouter] {} no handler added", getVerticleName());
+      if (getRouteList() == null) {
+        logger.info("[setupRouter] {} no route added", getVerticleName());
       } else {
-        getHandlerList().stream()
+        getRouteList().stream()
             .peek(a -> logger.info("[setupRouter] {} httpMethod={}, path={}", getVerticleName(), a.getHttpMethod(),
                 a.getPath()))
-            .forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath())
+            .forEach(a -> router.route(a.getHttpMethod(), a.getPath())
                 .handler(ctx -> ctx.put(Constants.Context.DTO, a.validate(ctx)).next())
                 .handler(a::handle));
-        logger.info("[setupRouter] {} handler added", getVerticleName());
+        getRouteList().stream().filter(BaseRoute::hasEventBus).forEach(a -> a.setEventBus(vertx.eventBus()));
+        logger.info("[setupRouter] {} route added", getVerticleName());
       }
       promise.complete();
     });
+  }
+
+  public final Router getRouter() {
+    return router;
   }
 }
