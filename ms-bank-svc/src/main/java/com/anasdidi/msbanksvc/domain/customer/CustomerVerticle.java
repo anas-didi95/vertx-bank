@@ -3,16 +3,16 @@ package com.anasdidi.msbanksvc.domain.customer;
 import java.util.Arrays;
 import java.util.List;
 
-import com.anasdidi.msbanksvc.common.BaseHandler;
+import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.anasdidi.msbanksvc.common.BaseVerticle;
-import com.anasdidi.msbanksvc.domain.customer.handler.AddCustomer;
+import com.anasdidi.msbanksvc.domain.customer.route.AddCustomer;
 
 import io.vertx.ext.web.Router;
 
 public class CustomerVerticle extends BaseVerticle {
 
   private final Router router;
-  private final List<BaseHandler> handlerList;
+  private final List<BaseRoute> handlerList;
 
   public CustomerVerticle() {
     router = Router.router(vertx);
@@ -30,7 +30,7 @@ public class CustomerVerticle extends BaseVerticle {
   }
 
   @Override
-  protected List<BaseHandler> getHandlerList() {
+  protected List<BaseRoute> getHandlerList() {
     return handlerList;
   }
 

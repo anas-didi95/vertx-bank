@@ -51,10 +51,9 @@ public class MainVerticle extends AbstractVerticle {
     router.route().handler(ctx -> {
       String traceId = VertxContextPRNG.current(vertx).nextString(6);
       logger.debug("traceId={}", traceId);
-      ctx.put("traceId", traceId);
-      ctx.next();
+      ctx.put("traceId", traceId).next();
     });
-    verticleList.stream().filter(BaseVerticle::isRouterHandler)
+    verticleList.stream().filter(BaseVerticle::hasRouter)
         .forEach(a -> {
           try {
             router.route(a.getSubRouterPath()).subRouter(a.getRouter());
