@@ -28,7 +28,7 @@ public abstract class BaseVerticle extends AbstractVerticle {
 
   protected abstract String getBaseURI();
 
-  protected abstract List<BaseHandler> getHandlerList();
+  protected abstract List<BaseRoute> getHandlerList();
 
   protected abstract String getVerticleName();
 
@@ -39,13 +39,13 @@ public abstract class BaseVerticle extends AbstractVerticle {
     return getBaseURI();
   }
 
-  public final boolean isRouterHandler() {
+  public final boolean hasRouter() {
     return getRouter() != null;
   }
 
   private final Future<Void> setupRouter() {
     return Future.future(promise -> {
-      if (!isRouterHandler()) {
+      if (!hasRouter()) {
         logger.info("[setupRouter] {} no router", getVerticleName());
       } else if (getHandlerList() == null) {
         logger.info("[setupRouter] {} no handler added", getVerticleName());
@@ -54,10 +54,7 @@ public abstract class BaseVerticle extends AbstractVerticle {
             .peek(a -> logger.info("[setupRouter] {} httpMethod={}, path={}", getVerticleName(), a.getHttpMethod(),
                 a.getPath()))
             .forEach(a -> getRouter().route(a.getHttpMethod(), a.getPath())
-                .handler(ctx -> {
-                  ctx.put(Constants.Context.DTO, a.validate(ctx));
-                  ctx.next();
-                })
+                .handler(ctx -> ctx.put(Constants.Context.DTO, a.validate(ctx)).next())
                 .handler(a::handle));
         logger.info("[setupRouter] {} handler added", getVerticleName());
       }

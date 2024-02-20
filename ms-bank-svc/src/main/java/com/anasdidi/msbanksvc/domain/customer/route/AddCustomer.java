@@ -1,11 +1,12 @@
-package com.anasdidi.msbanksvc.domain.customer.handler;
+package com.anasdidi.msbanksvc.domain.customer.route;
 
 import java.time.Instant;
+import java.util.Date;
 
 import org.apache.commons.validator.GenericValidator;
 
 import com.anasdidi.msbanksvc.common.BaseDTO;
-import com.anasdidi.msbanksvc.common.BaseHandler;
+import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -13,13 +14,12 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-public class AddCustomer extends BaseHandler {
+public class AddCustomer extends BaseRoute {
 
   @Override
-  protected void handle(RoutingContext ctx) {
+  protected JsonObject process(RoutingContext ctx) {
     AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
-    System.out.println(JsonObject.mapFrom(dto).encode());
-    sendResponse(ctx, new JsonObject().put("dateCreated", Instant.now()).put("newName", dto.name + "_new"));
+    return JsonObject.mapFrom(dto).put("dateCreated", Instant.now());
   }
 
   @Override
@@ -39,13 +39,15 @@ public class AddCustomer extends BaseHandler {
 
   static class AddCustomerDTO extends BaseDTO {
     public final String name;
+    public final Instant date;
 
     @JsonCreator
-    private AddCustomerDTO(@JsonProperty("name") String name) {
+    private AddCustomerDTO(@JsonProperty("name") String name, @JsonProperty("date") Date date) {
       if (GenericValidator.isBlankOrNull(name)) {
         throw new RuntimeException("Name empty");
       }
       this.name = name;
+      this.date = Instant.ofEpochMilli(date.getTime());
     }
   }
 }
