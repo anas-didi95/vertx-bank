@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.anasdidi.msbanksvc.common.BaseVerticle;
+import com.anasdidi.msbanksvc.common.Constants;
+import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.ValidationException;
 
@@ -53,8 +55,9 @@ public class MainVerticle extends AbstractVerticle {
     router.route().handler(ctx -> {
       String traceId = VertxContextPRNG.current(vertx).nextString(6);
       logger.debug("traceId={}", traceId);
-      ctx.put("traceId", traceId).next();
+      ctx.put(Constants.Context.TRACEID, traceId).next();
     });
+
     verticleList.stream().filter(BaseVerticle::hasRouter)
         .forEach(a -> {
           try {
@@ -64,11 +67,29 @@ public class MainVerticle extends AbstractVerticle {
           }
         });
 
-    router.errorHandler(40001, ctx -> {
-      ValidationException ex = (ValidationException) ctx.failure();
-      ctx.response().setStatusCode(400)
-          .end(new JsonObject().put("code", 40001).put("message", "Validation Error!").put("errorList", ex.errorList)
-              .encode());
+    router.route().failureHandler(ctx -> {
+      Throwable t = ctx.failure();
+      JsonObject body = JsonObject.of("traceId", ctx.get(Constants.Context.TRACEID));
+      int statusCode = 400;
+      AppError error;
+      boolean found = false;
+
+      if (t instanceof ValidationException ex) {
+        error = AppError.VALIDATE_ERROR;
+        body.put("code", error.code).put("message", error.message).put("errorList", ex.errorList);
+        found = true;
+      } else {
+        error = AppError.INTERNAL_SERVER_ERROR;
+        body.put("code", error.code).put("message", error.message);
+        statusCode = 500;
+      }
+
+      if (found) {
+        logger.debug("[failureHandler] statusCode={}, error={}, body={}", statusCode, error.toString(), body.encode());
+      } else {
+        logger.error("[failureHandler] Request Failed!", t);
+      }
+      ctx.response().setStatusCode(statusCode).end(body.encode());
     });
     return router;
   }
