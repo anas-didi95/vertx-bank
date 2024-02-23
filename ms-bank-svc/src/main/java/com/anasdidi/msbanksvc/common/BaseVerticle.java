@@ -54,7 +54,7 @@ public abstract class BaseVerticle extends AbstractVerticle {
                 a.getPath()))
             .peek(a -> a.setEventBus(vertx.eventBus()))
             .forEach(a -> router.route(a.getHttpMethod(), a.getPath())
-                .handler(ctx -> ctx.put(Constants.Context.DTO, a.validate(ctx)).next())
+                .handler(a::validate)
                 .handler(a::handle));
         logger.info("[setupRouter] {} route added", getVerticleName());
       }
