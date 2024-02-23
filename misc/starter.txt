@@ -1,1 +1,1 @@
-curl -G https://start.vertx.io/starter.zip -d "groupId=com.anasdidi" -d "artifactId=msbanksvc" -d "vertxVersion=4.5.3" -d "vertxDependencies=vertx-web" -d "language=java" -d "jdkVersion=17" -d "buildTool=maven" --output msbanksvc.zip
+curl -G https://start.vertx.io/starter.zip -d "groupId=com.anasdidi" -d "artifactId=msbanksvc" -d "vertxVersion=4.5.4" -d "vertxDependencies=vertx-web,vertx-pg-client" -d "language=java" -d "jdkVersion=17" -d "buildTool=maven" --output msbanksvc.zip
