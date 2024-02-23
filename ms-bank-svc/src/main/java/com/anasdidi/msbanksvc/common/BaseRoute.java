@@ -7,8 +7,7 @@ import io.vertx.ext.web.RoutingContext;
 
 public abstract class BaseRoute {
 
-  @SuppressWarnings("unused")
-  private EventBus eventBus;
+  protected EventBus eventBus;
 
   protected abstract JsonObject process(RoutingContext ctx);
 
@@ -16,13 +15,7 @@ public abstract class BaseRoute {
 
   protected abstract String getPath();
 
-  protected abstract boolean hasEventBus();
-
   protected abstract BaseDTO validate(RoutingContext ctx);
-
-  protected void sendResponse(RoutingContext ctx, JsonObject resBody) {
-    ctx.response().end(resBody.encode());
-  }
 
   protected final BaseDTO getDTO(RoutingContext ctx) {
     return ctx.get(Constants.Context.DTO);

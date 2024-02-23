@@ -52,10 +52,10 @@ public abstract class BaseVerticle extends AbstractVerticle {
         getRouteList().stream()
             .peek(a -> logger.info("[setupRouter] {} httpMethod={}, path={}", getVerticleName(), a.getHttpMethod(),
                 a.getPath()))
+            .peek(a -> a.setEventBus(vertx.eventBus()))
             .forEach(a -> router.route(a.getHttpMethod(), a.getPath())
                 .handler(ctx -> ctx.put(Constants.Context.DTO, a.validate(ctx)).next())
                 .handler(a::handle));
-        getRouteList().stream().filter(BaseRoute::hasEventBus).forEach(a -> a.setEventBus(vertx.eventBus()));
         logger.info("[setupRouter] {} route added", getVerticleName());
       }
       promise.complete();

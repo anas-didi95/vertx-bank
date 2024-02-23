@@ -33,11 +33,6 @@ public class AddCustomer extends BaseRoute {
   }
 
   @Override
-  protected boolean hasEventBus() {
-    return true;
-  }
-
-  @Override
   protected BaseDTO validate(RoutingContext ctx) {
     return ctx.body().asJsonObject().mapTo(AddCustomerDTO.class);
   }
