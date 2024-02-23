@@ -9,3 +9,13 @@ services:
       - "./:/home/vscode/workspace/:z"
       - ".vscode-server/:/home/vscode/.vscode-server/:z"
       - ".m2/:/home/vscode/.m2/:z"
+
+  postgres:
+    image: postgres:16.1-alpine3.19
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
