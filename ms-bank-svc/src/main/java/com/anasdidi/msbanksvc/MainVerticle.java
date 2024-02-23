@@ -8,10 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
+import com.anasdidi.msbanksvc.exception.ValidationException;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.Router;
@@ -61,6 +63,13 @@ public class MainVerticle extends AbstractVerticle {
             startPromise.fail(e);
           }
         });
+
+    router.errorHandler(40001, ctx -> {
+      ValidationException ex = (ValidationException) ctx.failure();
+      ctx.response().setStatusCode(400)
+          .end(new JsonObject().put("code", 40001).put("message", "Validation Error!").put("errorList", ex.errorList)
+              .encode());
+    });
     return router;
   }
 }

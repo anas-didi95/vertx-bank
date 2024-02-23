@@ -33,7 +33,7 @@ public class AddCustomer extends BaseRoute {
   }
 
   @Override
-  protected BaseDTO validate(RoutingContext ctx) {
+  protected BaseDTO getRequestVariable(RoutingContext ctx) {
     return ctx.body().asJsonObject().mapTo(AddCustomerDTO.class);
   }
 
@@ -44,11 +44,11 @@ public class AddCustomer extends BaseRoute {
     @JsonCreator
     private AddCustomerDTO(@JsonProperty("name") String name, @JsonProperty("date") Date date) {
       if (GenericValidator.isBlankOrNull(name)) {
-        throw new RuntimeException("Name empty");
+        addError("[name] is mandatory field!");
       }
+
       this.name = name;
       this.date = Instant.ofEpochMilli(date.getTime());
     }
   }
-
 }
