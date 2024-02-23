@@ -9,7 +9,7 @@ public class ValidationException extends BaseException {
   public final List<String> errorList;
 
   public ValidationException(List<String> errorList) {
-    super(AppError.VALIDATE_ERROR.code, AppError.VALIDATE_ERROR.message);
+    super(AppError.VALIDATE_ERROR);
     this.errorList = errorList;
   }
 }
