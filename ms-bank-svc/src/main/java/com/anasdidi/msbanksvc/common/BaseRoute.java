@@ -31,7 +31,7 @@ public abstract class BaseRoute {
   protected final void validate(RoutingContext ctx) {
     BaseDTO dto = getRequestVariable(ctx);
     if (!dto.validateErrorList.isEmpty()) {
-      ctx.fail(40001, new ValidationException(dto.validateErrorList));
+      ctx.fail(new ValidationException(dto.validateErrorList));
     } else {
       ctx.put(Constants.Context.DTO, dto).next();
     }
