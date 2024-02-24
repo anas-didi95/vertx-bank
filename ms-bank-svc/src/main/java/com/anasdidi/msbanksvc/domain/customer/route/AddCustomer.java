@@ -1,7 +1,7 @@
 package com.anasdidi.msbanksvc.domain.customer.route;
 
-import java.time.Instant;
-import java.util.Date;
+import java.util.Collections;
+import java.util.concurrent.CompletionStage;
 
 import org.apache.commons.validator.GenericValidator;
 
@@ -10,34 +10,35 @@ import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.templates.SqlTemplate;
+import io.vertx.sqlclient.templates.annotations.ParametersMapped;
 
 public class AddCustomer extends BaseRoute {
 
   @Override
   protected Future<JsonObject> process(RoutingContext ctx, SqlConnection conn) {
-    System.out.println("HERE");
-    System.out.println(conn.databaseMetadata().fullVersion());
-    return conn
-        .query(
-            "insert into public.t_cust(nm, created_dt, created_by, ver) values ('test', '2024-02-24', 'system', 0)")
-        .execute()
-        .onComplete(res -> {
-          System.out.println("HERE 3");
-          System.out.println(res.succeeded());
-          System.out.println(res.failed());
-        })
-        .compose(res -> {
-          System.out.println("HERE 2");
-          return Future.future(promise -> {
-            AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
-            promise.complete(JsonObject.mapFrom(dto).put("dateCreated", Instant.now()).put("rowCount", res.rowCount()));
-          });
-        });
+    AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
+
+    CompletionStage<RowSet<Row>> insert = SqlTemplate.forQuery(conn,
+        "insert into public.t_cust(nm, created_dt, created_by, ver) values (#{name}, now(), #{createdBy}, #{version}) returning id")
+        .mapFrom(AddCustomerDTO.class)
+        .execute(dto)
+        .toCompletionStage();
+
+    return Future.fromCompletionStage(insert)
+        .map(rst -> rst.iterator().next().getUUID(0))
+        .compose(id -> SqlTemplate.forQuery(conn, "select * from public.t_cust where id=#{id}")
+            .mapTo(Row::toJson)
+            .execute(Collections.singletonMap("id", id)))
+        .map(rst -> rst.iterator().next());
   }
 
   @Override
@@ -55,18 +56,22 @@ public class AddCustomer extends BaseRoute {
     return ctx.body().asJsonObject().mapTo(AddCustomerDTO.class);
   }
 
+  @DataObject
+  @ParametersMapped
   static class AddCustomerDTO extends BaseDTO {
     public final String name;
-    public final Instant date;
+    public final String createdBy;
+    public final Integer version;
 
     @JsonCreator
-    private AddCustomerDTO(@JsonProperty("name") String name, @JsonProperty("date") Date date) {
+    private AddCustomerDTO(@JsonProperty("name") String name) {
       if (GenericValidator.isBlankOrNull(name)) {
         addError("[name] is mandatory field!");
       }
 
       this.name = name;
-      this.date = Instant.ofEpochMilli(date.getTime());
+      this.createdBy = "SYSTEM";
+      this.version = 0;
     }
   }
 }
