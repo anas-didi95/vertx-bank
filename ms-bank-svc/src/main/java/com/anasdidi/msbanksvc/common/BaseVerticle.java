@@ -9,6 +9,10 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.Router;
+import io.vertx.pgclient.PgBuilder;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PoolOptions;
 
 public abstract class BaseVerticle extends AbstractVerticle {
 
@@ -17,7 +21,9 @@ public abstract class BaseVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    setupRouter()
+    Pool pool = setupDatabase();
+
+    setupRouter(pool)
         .onSuccess(e -> {
           logger.info("[start] {} started", getVerticleName());
           startPromise.complete();
@@ -40,7 +46,11 @@ public abstract class BaseVerticle extends AbstractVerticle {
     return getBaseURI();
   }
 
-  private final Future<Void> setupRouter() {
+  public final Router getRouter() {
+    return router;
+  }
+
+  private final Future<Void> setupRouter(Pool pool) {
     if (hasRouter() && router == null) {
       router = Router.router(vertx);
     }
@@ -55,14 +65,26 @@ public abstract class BaseVerticle extends AbstractVerticle {
             .peek(a -> a.setEventBus(vertx.eventBus()))
             .forEach(a -> router.route(a.getHttpMethod(), a.getPath())
                 .handler(a::validate)
-                .handler(a::handle));
+                .handler(ctx -> a.handle(ctx, pool)));
         logger.info("[setupRouter] {} route added", getVerticleName());
       }
       promise.complete();
     });
   }
 
-  public final Router getRouter() {
-    return router;
+  private Pool setupDatabase() {
+    PgConnectOptions connectOptions = new PgConnectOptions()
+        .setPort(5432)
+        .setHost("postgres")
+        .setDatabase("postgres")
+        .setUser("postgres")
+        .setPassword("postgres");
+    PoolOptions poolOptions = new PoolOptions();
+    return PgBuilder
+        .pool()
+        .with(poolOptions)
+        .connectingTo(connectOptions)
+        .using(vertx)
+        .build();
   }
 }

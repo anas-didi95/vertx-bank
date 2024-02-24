@@ -10,16 +10,34 @@ import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.SqlConnection;
 
 public class AddCustomer extends BaseRoute {
 
   @Override
-  protected JsonObject process(RoutingContext ctx) {
-    AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
-    return JsonObject.mapFrom(dto).put("dateCreated", Instant.now());
+  protected Future<JsonObject> process(RoutingContext ctx, SqlConnection conn) {
+    System.out.println("HERE");
+    System.out.println(conn.databaseMetadata().fullVersion());
+    return conn
+        .query(
+            "insert into public.t_cust(nm, created_dt, created_by, ver) values ('test', '2024-02-24', 'system', 0)")
+        .execute()
+        .onComplete(res -> {
+          System.out.println("HERE 3");
+          System.out.println(res.succeeded());
+          System.out.println(res.failed());
+        })
+        .compose(res -> {
+          System.out.println("HERE 2");
+          return Future.future(promise -> {
+            AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
+            promise.complete(JsonObject.mapFrom(dto).put("dateCreated", Instant.now()).put("rowCount", res.rowCount()));
+          });
+        });
   }
 
   @Override

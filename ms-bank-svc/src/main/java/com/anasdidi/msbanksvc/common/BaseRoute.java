@@ -2,16 +2,19 @@ package com.anasdidi.msbanksvc.common;
 
 import com.anasdidi.msbanksvc.exception.ValidationException;
 
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.SqlConnection;
 
 public abstract class BaseRoute {
 
   protected EventBus eventBus;
 
-  protected abstract JsonObject process(RoutingContext ctx);
+  protected abstract Future<JsonObject> process(RoutingContext ctx, SqlConnection conn);
 
   protected abstract HttpMethod getHttpMethod();
 
@@ -23,9 +26,10 @@ public abstract class BaseRoute {
     return ctx.get(Constants.Context.DTO);
   }
 
-  protected final void handle(RoutingContext ctx) {
-    JsonObject responseBody = process(ctx);
-    ctx.response().end(responseBody.encode());
+  protected final void handle(RoutingContext ctx, Pool pool) {
+    pool.withTransaction(conn -> process(ctx, conn))
+        .onSuccess(body -> ctx.response().end(body.encode()))
+        .onFailure(ctx::fail);
   }
 
   protected final void validate(RoutingContext ctx) {
