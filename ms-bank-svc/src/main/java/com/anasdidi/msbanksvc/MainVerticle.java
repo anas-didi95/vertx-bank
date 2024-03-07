@@ -11,11 +11,13 @@ import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.ValidationException;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.Router;
@@ -28,6 +30,7 @@ public class MainVerticle extends AbstractVerticle {
 
   public MainVerticle() {
     System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
+    DatabindCodec.mapper().registerModule(new JavaTimeModule());
     verticleList = Arrays.asList(new CustomerVerticle());
   }
 

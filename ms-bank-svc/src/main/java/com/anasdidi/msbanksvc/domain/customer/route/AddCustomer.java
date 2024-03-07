@@ -6,6 +6,7 @@ import java.util.concurrent.CompletionStage;
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.anasdidi.msbanksvc.common.ValidatorUtils;
+import com.anasdidi.msbanksvc.domain.customer.CustomerRowMapper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -35,9 +36,10 @@ public class AddCustomer extends BaseRoute {
     return Future.fromCompletionStage(insert)
         .map(rst -> rst.iterator().next().getUUID(0))
         .compose(id -> SqlTemplate.forQuery(conn, "select * from public.t_cust where id=#{id}")
-            .mapTo(Row::toJson)
+            .mapTo(CustomerRowMapper.INSTANCE)
             .execute(Collections.singletonMap("id", id)))
-        .map(rst -> rst.iterator().next());
+        .map(rst -> rst.iterator().next())
+        .map(JsonObject::mapFrom);
   }
 
   @Override
