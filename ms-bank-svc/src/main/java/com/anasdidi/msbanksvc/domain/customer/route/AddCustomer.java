@@ -3,10 +3,9 @@ package com.anasdidi.msbanksvc.domain.customer.route;
 import java.util.Collections;
 import java.util.concurrent.CompletionStage;
 
-import org.apache.commons.validator.GenericValidator;
-
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseRoute;
+import com.anasdidi.msbanksvc.common.ValidatorUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -65,9 +64,7 @@ public class AddCustomer extends BaseRoute {
 
     @JsonCreator
     private AddCustomerDTO(@JsonProperty("name") String name) {
-      if (GenericValidator.isBlankOrNull(name)) {
-        addError("[name] is mandatory field!");
-      }
+      addError(ValidatorUtils::isMandatoryField, "name", name);
 
       this.name = name;
       this.createdBy = "SYSTEM";
