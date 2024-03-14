@@ -66,7 +66,7 @@ public class AddCustomer extends BaseRoute {
 
     @JsonCreator
     private AddCustomerDTO(@JsonProperty("name") String name) {
-      addError(ValidatorUtils::isMandatoryField, "name", name);
+      addError(ValidatorUtils.isMandatoryField(), "name", name);
 
       this.name = name;
       this.createdBy = "SYSTEM";

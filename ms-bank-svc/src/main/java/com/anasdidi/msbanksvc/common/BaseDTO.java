@@ -2,7 +2,6 @@ package com.anasdidi.msbanksvc.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -15,8 +14,8 @@ public abstract class BaseDTO {
     validateErrorList = new ArrayList<>();
   }
 
-  protected final void addError(BiFunction<String, Object, String> validator, String field, String value) {
-    String error = validator.apply(field, value);
+  protected final void addError(IValidator validator, String field, String value) {
+    String error = validator.validate(field, value);
     if (error != null) {
       validateErrorList.add(error);
     }
