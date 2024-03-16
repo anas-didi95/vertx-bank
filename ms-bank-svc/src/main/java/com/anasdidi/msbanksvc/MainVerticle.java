@@ -22,6 +22,9 @@ import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import liquibase.Scope;
+import liquibase.command.CommandScope;
+import liquibase.resource.ClassLoaderResourceAccessor;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -36,7 +39,7 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    Future.all(deployVerticleList()).onSuccess(res -> {
+    setupDatabase().compose(a -> Future.all(deployVerticleList())).onSuccess(res -> {
       vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(8888, http -> {
         if (http.failed()) {
           startPromise.fail(http.cause());
@@ -50,6 +53,22 @@ public class MainVerticle extends AbstractVerticle {
 
   private List<Future<String>> deployVerticleList() {
     return verticleList.stream().map(vertx::deployVerticle).toList();
+  }
+
+  private Future<Object> setupDatabase() {
+    return vertx.executeBlocking(() -> {
+      logger.info("[setupDatabase] Running Liquibase...");
+      Scope.child(Scope.Attr.resourceAccessor, new ClassLoaderResourceAccessor(), () -> {
+        CommandScope update = new CommandScope("update");
+        update.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
+        update.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
+        update.addArgumentValue("username", "postgres");
+        update.addArgumentValue("password", "postgres");
+        update.execute();
+      });
+      logger.info("[setupDatabase] Running Liquibase...DONE");
+      return Future.succeededFuture();
+    });
   }
 
   private Router getRequestHandler(Promise<Void> startPromise) {
