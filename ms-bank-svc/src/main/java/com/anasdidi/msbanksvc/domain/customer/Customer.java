@@ -3,12 +3,15 @@ package com.anasdidi.msbanksvc.domain.customer;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.sqlclient.templates.annotations.Column;
 import io.vertx.sqlclient.templates.annotations.RowMapped;
 
 @DataObject
 @RowMapped
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Customer {
 
   @Column(name = "id")
