@@ -24,6 +24,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
+import liquibase.exception.CommandExecutionException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
 public class MainVerticle extends AbstractVerticle {
@@ -59,20 +60,29 @@ public class MainVerticle extends AbstractVerticle {
     return vertx.executeBlocking(() -> {
       logger.info("[setupDatabase] Running Liquibase...");
       Scope.child(Scope.Attr.resourceAccessor, new ClassLoaderResourceAccessor(), () -> {
-        CommandScope rollback = new CommandScope("rollback");
-        rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
-        rollback.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
-        rollback.addArgumentValue("username", "postgres");
-        rollback.addArgumentValue("password", "postgres");
-        rollback.addArgumentValue("tag", "1.0.0");
-        rollback.execute();
+        try {
+          logger.info("[setupDatabase] Liquibase rollback tag=1.0.0...");
+          CommandScope rollback = new CommandScope("rollback");
+          rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
+          rollback.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
+          rollback.addArgumentValue("username", "postgres");
+          rollback.addArgumentValue("password", "postgres");
+          rollback.addArgumentValue("tag", "1.0.0");
+          rollback.execute();
+        } catch (CommandExecutionException ex) {
+          logger.warn("[setupDatabase] Rollback failed!", ex);
+        } finally {
+          logger.info("[setupDatabase] Liquibase rollback tag=1.0.0...DONE");
+        }
 
+        logger.info("[setupDatabase] Liquibase update...");
         CommandScope update = new CommandScope("update");
         update.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
         update.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
         update.addArgumentValue("username", "postgres");
         update.addArgumentValue("password", "postgres");
         update.execute();
+        logger.info("[setupDatabase] Liquibase update...DONE");
       });
       logger.info("[setupDatabase] Running Liquibase...DONE");
       return Future.succeededFuture();
