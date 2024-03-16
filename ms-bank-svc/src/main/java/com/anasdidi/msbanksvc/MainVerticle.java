@@ -59,6 +59,14 @@ public class MainVerticle extends AbstractVerticle {
     return vertx.executeBlocking(() -> {
       logger.info("[setupDatabase] Running Liquibase...");
       Scope.child(Scope.Attr.resourceAccessor, new ClassLoaderResourceAccessor(), () -> {
+        CommandScope rollback = new CommandScope("rollback");
+        rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
+        rollback.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
+        rollback.addArgumentValue("username", "postgres");
+        rollback.addArgumentValue("password", "postgres");
+        rollback.addArgumentValue("tag", "1.0.0");
+        rollback.execute();
+
         CommandScope update = new CommandScope("update");
         update.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
         update.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
