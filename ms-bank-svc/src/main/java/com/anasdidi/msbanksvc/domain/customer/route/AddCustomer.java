@@ -28,14 +28,14 @@ public class AddCustomer extends BaseRoute {
     AddCustomerDTO dto = (AddCustomerDTO) getDTO(ctx);
 
     CompletionStage<RowSet<Row>> insert = SqlTemplate.forQuery(conn,
-        "insert into public.t_cust(nm, created_dt, created_by, ver) values (#{name}, now(), #{createdBy}, #{version}) returning id")
+        "insert into t_cust(nm, created_dt, created_by, ver) values (#{name}, now(), #{createdBy}, #{version}) returning id")
         .mapFrom(AddCustomerDTO.class)
         .execute(dto)
         .toCompletionStage();
 
     return Future.fromCompletionStage(insert)
         .map(rst -> rst.iterator().next().getUUID(0))
-        .compose(id -> SqlTemplate.forQuery(conn, "select * from public.t_cust where id=#{id}")
+        .compose(id -> SqlTemplate.forQuery(conn, "select * from t_cust where id=#{id}")
             .mapTo(CustomerRowMapper.INSTANCE)
             .execute(Collections.singletonMap("id", id)))
         .map(rst -> rst.iterator().next())
