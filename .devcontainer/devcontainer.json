@@ -19,7 +19,12 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["redhat.fabric8-analytics", "redhat.vscode-xml"]
+      "extensions": [
+        "redhat.fabric8-analytics",
+        "redhat.vscode-xml",
+        "redhat.vscode-yaml",
+        "voidrot.liquibase"
+      ]
     }
   }
 
