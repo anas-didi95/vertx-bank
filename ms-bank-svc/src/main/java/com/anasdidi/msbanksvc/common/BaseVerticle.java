@@ -1,6 +1,7 @@
 package com.anasdidi.msbanksvc.common;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,8 @@ public abstract class BaseVerticle extends AbstractVerticle {
         .setHost("postgres")
         .setDatabase("postgres")
         .setUser("postgres")
-        .setPassword("postgres");
+        .setPassword("postgres")
+        .setProperties(Map.of("search_path", "msbanksvc"));
     PoolOptions poolOptions = new PoolOptions();
     return PgBuilder
         .pool()
