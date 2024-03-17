@@ -26,14 +26,17 @@ public class TestAddCustomer {
     vertx.deployVerticle(new MainVerticle(), testContext.succeedingThenComplete());
   }
 
-  @Test
-  void processSuccess(Vertx vertx, VertxTestContext testContext) {
-    Checkpoint checkpoint = testContext.checkpoint(2);
-
-    CompletionStage<HttpClientResponse> request = vertx.createHttpClient()
+  private CompletionStage<HttpClientResponse> getRequest(Vertx vertx, JsonObject body) {
+    return vertx.createHttpClient()
         .request(HttpMethod.POST, 8888, "localhost", "/cust/")
-        .compose(req -> req.send(new JsonObject().put("name", "Anas Juwaidi").encode()))
+        .compose(req -> req.send(body.encode()))
         .toCompletionStage();
+  }
+
+  @Test
+  void testSuccess(Vertx vertx, VertxTestContext testContext) {
+    CompletionStage<HttpClientResponse> request = getRequest(vertx, new JsonObject().put("name", "Anas Juwaidi"));
+    Checkpoint checkpoint = testContext.checkpoint(2);
 
     Future.fromCompletionStage(request)
         .compose(res -> Future.succeededFuture(res.statusCode()))
@@ -48,6 +51,29 @@ public class TestAddCustomer {
           JsonObject json = new JsonObject(res);
           Assertions.assertNotNull(json.getString("id"));
           Assertions.assertEquals(0, json.getInteger("version"));
+          checkpoint.flag();
+        })));
+  }
+
+  @Test
+  void testValidationError(Vertx vertx, VertxTestContext testContext) {
+    CompletionStage<HttpClientResponse> request = getRequest(vertx, new JsonObject());
+    Checkpoint checkpoint = testContext.checkpoint(2);
+
+    Future.fromCompletionStage(request)
+        .compose(res -> Future.succeededFuture(res.statusCode()))
+        .onComplete(testContext.succeeding(statusCode -> testContext.verify(() -> {
+          Assertions.assertEquals(400, statusCode);
+          checkpoint.flag();
+        })));
+
+    Future.fromCompletionStage(request)
+        .compose(HttpClientResponse::body)
+        .onComplete(testContext.succeeding(buf -> testContext.verify(() -> {
+          JsonObject json = new JsonObject(buf);
+          Assertions.assertEquals(40001, json.getInteger("code"));
+          Assertions.assertEquals("Validation Error!", json.getString("message"));
+          Assertions.assertTrue(!json.getJsonArray("errorList").isEmpty());
           checkpoint.flag();
         })));
   }
