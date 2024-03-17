@@ -10,6 +10,7 @@ import com.anasdidi.msbanksvc.domain.customer.CustomerRowMapper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
@@ -50,6 +51,11 @@ public class AddCustomer extends BaseRoute {
   @Override
   protected String getPath() {
     return "/";
+  }
+
+  @Override
+  protected HttpResponseStatus getHttpResponseStatus() {
+    return HttpResponseStatus.CREATED;
   }
 
   @Override
