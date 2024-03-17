@@ -1,12 +1,14 @@
 package com.anasdidi.msbanksvc.domain.customer.route;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.anasdidi.msbanksvc.common.ValidatorUtils;
 import com.anasdidi.msbanksvc.domain.customer.CustomerRowMapper;
+import com.anasdidi.msbanksvc.exception.RequestBodyEmptyException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -60,7 +62,8 @@ public class AddCustomer extends BaseRoute {
 
   @Override
   protected BaseDTO getRequestVariable(RoutingContext ctx) {
-    return ctx.body().asJsonObject().mapTo(AddCustomerDTO.class);
+    return Optional.ofNullable(ctx.body().asJsonObject()).orElseThrow(RequestBodyEmptyException::new)
+        .mapTo(AddCustomerDTO.class);
   }
 
   @DataObject

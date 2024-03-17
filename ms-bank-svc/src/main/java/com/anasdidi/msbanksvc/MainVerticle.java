@@ -10,6 +10,7 @@ import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
+import com.anasdidi.msbanksvc.exception.BaseException;
 import com.anasdidi.msbanksvc.exception.ValidationException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -115,8 +116,12 @@ public class MainVerticle extends AbstractVerticle {
       boolean found = false;
 
       if (t instanceof ValidationException ex) {
-        error = AppError.VALIDATE_ERROR;
-        body.put("code", error.code).put("message", error.message).put("errorList", ex.errorList);
+        error = ex.error;
+        body.put("code", ex.error.code).put("message", ex.message).put("errorList", ex.errorList);
+        found = true;
+      } else if (t instanceof BaseException ex) {
+        error = ex.error;
+        body.put("code", ex.error.code).put("message", ex.message);
         found = true;
       } else {
         error = AppError.INTERNAL_SERVER_ERROR;
