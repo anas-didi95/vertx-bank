@@ -4,11 +4,11 @@ import com.anasdidi.msbanksvc.common.Constants.AppError;
 
 public abstract class BaseException extends RuntimeException {
 
-  public final int code;
+  public final AppError error;
   public final String message;
 
   protected BaseException(AppError error) {
-    this.code = error.code;
+    this.error = error;
     this.message = error.message;
   }
 }

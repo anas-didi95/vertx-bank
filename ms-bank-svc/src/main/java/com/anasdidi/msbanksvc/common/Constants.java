@@ -9,6 +9,7 @@ public final class Constants {
 
   public enum AppError {
     VALIDATE_ERROR(40001, "Validation Error!"),
+    REQUEST_BODY_EMPTY(40002, "Request Body is Empty!"),
     INTERNAL_SERVER_ERROR(500, "Internal Server Error!");
 
     public final Integer code;

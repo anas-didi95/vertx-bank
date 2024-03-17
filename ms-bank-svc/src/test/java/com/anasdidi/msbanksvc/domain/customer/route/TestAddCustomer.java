@@ -29,7 +29,7 @@ public class TestAddCustomer {
   private CompletionStage<HttpClientResponse> getRequest(Vertx vertx, JsonObject body) {
     return vertx.createHttpClient()
         .request(HttpMethod.POST, 8888, "localhost", "/cust/")
-        .compose(req -> req.send(body.encode()))
+        .compose(req -> body != null ? req.send(body.encode()) : req.send())
         .toCompletionStage();
   }
 
@@ -74,6 +74,28 @@ public class TestAddCustomer {
           Assertions.assertEquals(40001, json.getInteger("code"));
           Assertions.assertEquals("Validation Error!", json.getString("message"));
           Assertions.assertTrue(!json.getJsonArray("errorList").isEmpty());
+          checkpoint.flag();
+        })));
+  }
+
+  @Test
+  void testRequestBodyEmptyError(Vertx vertx, VertxTestContext testContext) {
+    CompletionStage<HttpClientResponse> request = getRequest(vertx, null);
+    Checkpoint checkpoint = testContext.checkpoint(2);
+
+    Future.fromCompletionStage(request)
+        .compose(res -> Future.succeededFuture(res.statusCode()))
+        .onComplete(testContext.succeeding(statusCode -> testContext.verify(() -> {
+          Assertions.assertEquals(400, statusCode);
+          checkpoint.flag();
+        })));
+
+    Future.fromCompletionStage(request)
+        .compose(HttpClientResponse::body)
+        .onComplete(testContext.succeeding(buf -> testContext.verify(() -> {
+          JsonObject json = new JsonObject(buf);
+          Assertions.assertEquals(40002, json.getInteger("code"));
+          Assertions.assertEquals("Request Body is Empty!", json.getString("message"));
           checkpoint.flag();
         })));
   }
