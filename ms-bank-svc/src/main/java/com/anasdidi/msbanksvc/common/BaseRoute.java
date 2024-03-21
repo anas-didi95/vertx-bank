@@ -1,5 +1,7 @@
 package com.anasdidi.msbanksvc.common;
 
+import org.apache.http.entity.ContentType;
+
 import com.anasdidi.msbanksvc.exception.ValidationException;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -23,6 +25,8 @@ public abstract class BaseRoute {
 
   protected abstract HttpResponseStatus getHttpResponseStatus();
 
+  protected abstract ContentType getHttpResponseMimeType();
+
   protected abstract BaseDTO getRequestVariable(RoutingContext ctx) throws ValidationException;
 
   protected final BaseDTO getDTO(RoutingContext ctx) {
@@ -31,7 +35,10 @@ public abstract class BaseRoute {
 
   protected final void handle(RoutingContext ctx, Pool pool) {
     pool.withTransaction(conn -> process(ctx, conn))
-        .onSuccess(body -> ctx.response().setStatusCode(getHttpResponseStatus().code()).end(body.encode()))
+        .onSuccess(body -> CommonUtils.initResponse(ctx)
+            .putHeader("Content-Type", getHttpResponseMimeType().getMimeType())
+            .setStatusCode(getHttpResponseStatus().code())
+            .end(body.encode()))
         .onFailure(ctx::fail);
   }
 

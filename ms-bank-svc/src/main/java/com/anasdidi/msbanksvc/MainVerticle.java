@@ -6,12 +6,14 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.http.entity.ContentType;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.anasdidi.msbanksvc.common.BaseVerticle;
+import com.anasdidi.msbanksvc.common.CommonUtils;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
@@ -170,7 +172,9 @@ public class MainVerticle extends AbstractVerticle {
       } else {
         logger.error("[failureHandler] Request Failed!", t);
       }
-      ctx.response().setStatusCode(statusCode).end(body.encode());
+      CommonUtils.initResponse(ctx)
+          .putHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType())
+          .setStatusCode(statusCode).end(body.encode());
     });
     return router;
   }

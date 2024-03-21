@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
+import org.apache.http.entity.ContentType;
+
 import com.anasdidi.msbanksvc.common.BaseDTO;
 import com.anasdidi.msbanksvc.common.BaseRoute;
 import com.anasdidi.msbanksvc.common.ValidatorUtils;
@@ -58,6 +60,11 @@ public class AddCustomer extends BaseRoute {
   @Override
   protected HttpResponseStatus getHttpResponseStatus() {
     return HttpResponseStatus.CREATED;
+  }
+
+  @Override
+  protected ContentType getHttpResponseMimeType() {
+    return ContentType.APPLICATION_JSON;
   }
 
   @Override
