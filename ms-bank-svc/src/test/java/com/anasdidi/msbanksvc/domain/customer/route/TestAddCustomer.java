@@ -2,6 +2,7 @@ package com.anasdidi.msbanksvc.domain.customer.route;
 
 import java.util.concurrent.CompletionStage;
 
+import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,12 +37,19 @@ public class TestAddCustomer {
   @Test
   void testSuccess(Vertx vertx, VertxTestContext testContext) {
     CompletionStage<HttpClientResponse> request = getRequest(vertx, new JsonObject().put("name", "Anas Juwaidi"));
-    Checkpoint checkpoint = testContext.checkpoint(2);
+    Checkpoint checkpoint = testContext.checkpoint(3);
 
     Future.fromCompletionStage(request)
         .compose(res -> Future.succeededFuture(res.statusCode()))
         .onComplete(testContext.succeeding(statusCode -> testContext.verify(() -> {
           Assertions.assertEquals(201, statusCode);
+          checkpoint.flag();
+        })));
+
+    Future.fromCompletionStage(request)
+        .compose(res -> Future.succeededFuture(res.getHeader("Content-Type")))
+        .onComplete(testContext.succeeding(header -> testContext.verify(() -> {
+          Assertions.assertEquals(ContentType.APPLICATION_JSON.getMimeType(), header);
           checkpoint.flag();
         })));
 
@@ -58,12 +66,19 @@ public class TestAddCustomer {
   @Test
   void testValidationError(Vertx vertx, VertxTestContext testContext) {
     CompletionStage<HttpClientResponse> request = getRequest(vertx, new JsonObject());
-    Checkpoint checkpoint = testContext.checkpoint(2);
+    Checkpoint checkpoint = testContext.checkpoint(3);
 
     Future.fromCompletionStage(request)
         .compose(res -> Future.succeededFuture(res.statusCode()))
         .onComplete(testContext.succeeding(statusCode -> testContext.verify(() -> {
           Assertions.assertEquals(400, statusCode);
+          checkpoint.flag();
+        })));
+
+    Future.fromCompletionStage(request)
+        .compose(res -> Future.succeededFuture(res.getHeader("Content-Type")))
+        .onComplete(testContext.succeeding(header -> testContext.verify(() -> {
+          Assertions.assertEquals(ContentType.APPLICATION_JSON.getMimeType(), header);
           checkpoint.flag();
         })));
 
@@ -81,12 +96,19 @@ public class TestAddCustomer {
   @Test
   void testRequestBodyEmptyError(Vertx vertx, VertxTestContext testContext) {
     CompletionStage<HttpClientResponse> request = getRequest(vertx, null);
-    Checkpoint checkpoint = testContext.checkpoint(2);
+    Checkpoint checkpoint = testContext.checkpoint(3);
 
     Future.fromCompletionStage(request)
         .compose(res -> Future.succeededFuture(res.statusCode()))
         .onComplete(testContext.succeeding(statusCode -> testContext.verify(() -> {
           Assertions.assertEquals(400, statusCode);
+          checkpoint.flag();
+        })));
+
+    Future.fromCompletionStage(request)
+        .compose(res -> Future.succeededFuture(res.getHeader("Content-Type")))
+        .onComplete(testContext.succeeding(header -> testContext.verify(() -> {
+          Assertions.assertEquals(ContentType.APPLICATION_JSON.getMimeType(), header);
           checkpoint.flag();
         })));
 
