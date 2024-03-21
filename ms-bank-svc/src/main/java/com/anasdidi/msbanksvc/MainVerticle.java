@@ -1,8 +1,13 @@
 package com.anasdidi.msbanksvc;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,39 +46,66 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    setupDatabase().compose(a -> Future.all(deployVerticleList())).onSuccess(res -> {
-      vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(8888, http -> {
-        if (http.failed()) {
-          startPromise.fail(http.cause());
+    getApplicationVersion()
+        .andThen(
+            version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
+                .put(Constants.LocalMap.KEY_APP_VERSION, version.result()))
+        .compose(version -> setupDatabase(version))
+        .compose(v -> Future.all(deployVerticleList()))
+        .onSuccess(res -> {
+          vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(8888, http -> {
+            if (http.failed()) {
+              startPromise.fail(http.cause());
+            }
+
+            logger.info("HTTP server started on port 8888");
+            startPromise.complete();
+          });
+        }).onFailure(res -> startPromise.fail(res));
+  }
+
+  private Future<String> getApplicationVersion() {
+    return vertx.executeBlocking(() -> {
+      MavenXpp3Reader reader = new MavenXpp3Reader();
+      Model model;
+
+      File file = new File("pom.xml");
+      if (file.exists()) {
+        logger.info("[getApplicationVersion] Get from file");
+        try (FileReader input = new FileReader(file)) {
+          model = reader.read(input);
         }
+      } else {
+        logger.info("[getApplicationVersion] Get from resource");
+        try (InputStreamReader input = new InputStreamReader(
+            MainVerticle.class.getResourceAsStream("/META-INF/maven/com.anasdidi/msbanksvc/pom.xml"))) {
+          model = reader.read(input);
+        }
+      }
 
-        logger.info("HTTP server started on port 8888");
-        startPromise.complete();
-      });
-    }).onFailure(res -> startPromise.fail(res));
+      logger.info("[getApplicationVersion] version={}", model.getVersion());
+      return model.getVersion();
+    });
+
   }
 
-  private List<Future<String>> deployVerticleList() {
-    return verticleList.stream().map(vertx::deployVerticle).toList();
-  }
-
-  private Future<Object> setupDatabase() {
+  private Future<Void> setupDatabase(String version) {
     return vertx.executeBlocking(() -> {
       logger.info("[setupDatabase] Running Liquibase...");
       Scope.child(Scope.Attr.resourceAccessor, new ClassLoaderResourceAccessor(), () -> {
         try {
-          logger.info("[setupDatabase] Liquibase rollback tag=1.0.0...");
+          logger.info("[setupDatabase] Liquibase rollback tag={}...", version);
           CommandScope rollback = new CommandScope("rollback");
           rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
           rollback.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
           rollback.addArgumentValue("username", "postgres");
           rollback.addArgumentValue("password", "postgres");
-          rollback.addArgumentValue("tag", "1.0.0");
+          rollback.addArgumentValue("tag", version);
           rollback.execute();
         } catch (CommandExecutionException ex) {
-          logger.warn("[setupDatabase] Rollback failed!", ex);
+          logger.warn("[setupDatabase] Rollback skipped!", ex);
         } finally {
-          logger.info("[setupDatabase] Liquibase rollback tag=1.0.0...DONE");
+          logger.info("[setupDatabase] Liquibase rollback tag={}...DONE", version);
         }
 
         logger.info("[setupDatabase] Liquibase update...");
@@ -86,8 +118,12 @@ public class MainVerticle extends AbstractVerticle {
         logger.info("[setupDatabase] Liquibase update...DONE");
       });
       logger.info("[setupDatabase] Running Liquibase...DONE");
-      return Future.succeededFuture();
+      return null;
     });
+  }
+
+  private List<Future<String>> deployVerticleList() {
+    return verticleList.stream().map(vertx::deployVerticle).toList();
   }
 
   private Router getRequestHandler(Promise<Void> startPromise) {

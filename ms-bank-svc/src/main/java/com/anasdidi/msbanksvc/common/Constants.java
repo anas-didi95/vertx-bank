@@ -2,6 +2,11 @@ package com.anasdidi.msbanksvc.common;
 
 public final class Constants {
 
+  public final class LocalMap {
+    public final static String NAME = "msbanksvc";
+    public final static String KEY_APP_VERSION = "LOCALMAP:APP_VER";
+  }
+
   public final class Context {
     public final static String DTO = "CONTEXT:DTO";
     public final static String TRACEID = "CONTEXT:TRACEID";
