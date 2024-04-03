@@ -8,4 +8,4 @@ FROM eclipse-temurin:17-alpine
 WORKDIR /workspace
 COPY --from=build-jar /workspace/target/msbanksvc-fat.jar msbanksvc-fat.jar
 ENTRYPOINT ["sh", "-c"]
-CMD ["echo 'Starting in 15s' && sleep 15 && exec java -jar msbanksvc-fat.jar"]
+CMD ["exec java -jar msbanksvc-fat.jar"]
