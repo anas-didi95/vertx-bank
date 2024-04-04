@@ -52,12 +52,9 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    setupConfig();
-
-    getApplicationVersion()
-        .andThen(
-            version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
-                .put(Constants.LocalMap.KEY_APP_VERSION, version.result()))
+    setupConfig().compose(v -> getApplicationVersion())
+        .andThen(version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
+            .put(Constants.LocalMap.KEY_APP_VERSION, version.result()))
         .compose(version -> setupDatabase(version))
         .compose(v -> Future.all(deployVerticleList()))
         .onSuccess(res -> {
@@ -98,16 +95,17 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  private void setupConfig() {
-    ConfigRetriever application = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
+  private Future<Void> setupConfig() {
+    return ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
         .addStore(new ConfigStoreOptions()
             .setType("file")
             .setFormat("yaml")
-            .setConfig(new JsonObject().put("path", "application.yml"))));
-    application.getConfig().onSuccess(json -> {
-      ApplicationConfig.create(json);
-      logger.info("[setupConfig] {}", ApplicationConfig.instance());
-    });
+            .setConfig(new JsonObject().put("path", "application.yml"))))
+        .getConfig()
+        .compose(json -> {
+          ApplicationConfig.create(json);
+          return Future.succeededFuture(null);
+        });
   }
 
   private Future<Void> setupDatabase(String version) {
@@ -118,9 +116,9 @@ public class MainVerticle extends AbstractVerticle {
           logger.info("[setupDatabase] Liquibase rollback tag={}...", version);
           CommandScope rollback = new CommandScope("rollback");
           rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
-          rollback.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
-          rollback.addArgumentValue("username", "postgres");
-          rollback.addArgumentValue("password", "postgres");
+          rollback.addArgumentValue("url", ApplicationConfig.instance().getJdbcUrl());
+          rollback.addArgumentValue("username", ApplicationConfig.instance().getDbUser());
+          rollback.addArgumentValue("password", ApplicationConfig.instance().getDbPassword());
           rollback.addArgumentValue("tag", version);
           rollback.execute();
         } catch (CommandExecutionException ex) {
@@ -132,9 +130,9 @@ public class MainVerticle extends AbstractVerticle {
         logger.info("[setupDatabase] Liquibase update...");
         CommandScope update = new CommandScope("update");
         update.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
-        update.addArgumentValue("url", "jdbc:postgresql://postgres:5432/postgres");
-        update.addArgumentValue("username", "postgres");
-        update.addArgumentValue("password", "postgres");
+        update.addArgumentValue("url", ApplicationConfig.instance().getJdbcUrl());
+        update.addArgumentValue("username", ApplicationConfig.instance().getDbUser());
+        update.addArgumentValue("password", ApplicationConfig.instance().getDbPassword());
         update.execute();
         logger.info("[setupDatabase] Liquibase update...DONE");
       });

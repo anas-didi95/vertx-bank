@@ -1,19 +1,18 @@
 package com.anasdidi.msbanksvc.common;
 
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.anasdidi.msbanksvc.config.ApplicationConfig;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.Router;
 import io.vertx.pgclient.PgBuilder;
-import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
 
 public abstract class BaseVerticle extends AbstractVerticle {
 
@@ -74,18 +73,9 @@ public abstract class BaseVerticle extends AbstractVerticle {
   }
 
   private Pool setupDatabase() {
-    PgConnectOptions connectOptions = new PgConnectOptions()
-        .setPort(5432)
-        .setHost("postgres")
-        .setDatabase("postgres")
-        .setUser("postgres")
-        .setPassword("postgres")
-        .setProperties(Map.of("search_path", "msbanksvc"));
-    PoolOptions poolOptions = new PoolOptions();
     return PgBuilder
         .pool()
-        .with(poolOptions)
-        .connectingTo(connectOptions)
+        .connectingTo(ApplicationConfig.instance().getPgConnectOptions())
         .using(vertx)
         .build();
   }
