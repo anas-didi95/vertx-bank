@@ -16,11 +16,15 @@ import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.common.CommonUtils;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
+import com.anasdidi.msbanksvc.config.ApplicationConfig;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.BaseException;
 import com.anasdidi.msbanksvc.exception.ValidationException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -48,6 +52,8 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
+    setupConfig();
+
     getApplicationVersion()
         .andThen(
             version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
@@ -55,14 +61,16 @@ public class MainVerticle extends AbstractVerticle {
         .compose(version -> setupDatabase(version))
         .compose(v -> Future.all(deployVerticleList()))
         .onSuccess(res -> {
-          vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(8888, http -> {
-            if (http.failed()) {
-              startPromise.fail(http.cause());
-            }
+          vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(
+              ApplicationConfig.instance().getServerPort(), ApplicationConfig.instance().getServerHost(), http -> {
+                if (http.failed()) {
+                  startPromise.fail(http.cause());
+                }
 
-            logger.info("HTTP server started on port 8888");
-            startPromise.complete();
-          });
+                logger.info("HTTP server started on {}:{}", ApplicationConfig.instance().getServerHost(),
+                    ApplicationConfig.instance().getServerPort());
+                startPromise.complete();
+              });
         }).onFailure(res -> startPromise.fail(res));
   }
 
@@ -88,7 +96,18 @@ public class MainVerticle extends AbstractVerticle {
       logger.info("[getApplicationVersion] version={}", model.getVersion());
       return model.getVersion();
     });
+  }
 
+  private void setupConfig() {
+    ConfigRetriever application = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
+        .addStore(new ConfigStoreOptions()
+            .setType("file")
+            .setFormat("yaml")
+            .setConfig(new JsonObject().put("path", "application.yml"))));
+    application.getConfig().onSuccess(json -> {
+      ApplicationConfig.create(json);
+      logger.info("[setupConfig] {}", ApplicationConfig.instance());
+    });
   }
 
   private Future<Void> setupDatabase(String version) {
