@@ -2,6 +2,8 @@ package com.anasdidi.msbanksvc.config;
 
 import java.util.Map;
 
+import com.anasdidi.msbanksvc.common.Constants;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgConnectOptions;
 
@@ -73,7 +75,7 @@ public final class ApplicationConfig {
         .setDatabase(getDbDatabase())
         .setUser(getDbUser())
         .setPassword(getDbPassword())
-        .setProperties(Map.of("search_path", getDb().getString("schema")));
+        .setProperties(Map.of("search_path", Constants.DB_SCHEMA));
   }
 
   public String getJdbcUrl() {

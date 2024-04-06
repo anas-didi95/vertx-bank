@@ -2,6 +2,8 @@ package com.anasdidi.msbanksvc.common;
 
 public final class Constants {
 
+  public final static String DB_SCHEMA = "msbanksvc";
+
   public final class LocalMap {
     public final static String NAME = "msbanksvc";
     public final static String KEY_APP_VERSION = "LOCALMAP:APP_VER";

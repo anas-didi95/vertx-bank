@@ -8,4 +8,3 @@ db:
   database: postgres
   user: postgres
   password: postgres
-  schema: msbanksvc
