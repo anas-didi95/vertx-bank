@@ -1,0 +1,4 @@
+error:
+  40001: Validation Error!
+  40002: Request Body is Empty!
+  500: Internal Server Error!

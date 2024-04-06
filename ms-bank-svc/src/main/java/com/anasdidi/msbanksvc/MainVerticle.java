@@ -17,6 +17,7 @@ import com.anasdidi.msbanksvc.common.CommonUtils;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.config.ApplicationConfig;
+import com.anasdidi.msbanksvc.config.MessageConfig;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.BaseException;
 import com.anasdidi.msbanksvc.exception.ValidationException;
@@ -52,9 +53,10 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    setupConfig().compose(v -> getApplicationVersion())
-        .andThen(version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
-            .put(Constants.LocalMap.KEY_APP_VERSION, version.result()))
+    setupConfig()
+        .compose(v -> getApplicationVersion()
+            .andThen(version -> vertx.sharedData().getLocalMap(Constants.LocalMap.NAME)
+                .put(Constants.LocalMap.KEY_APP_VERSION, version.result())))
         .compose(version -> setupDatabase(version))
         .compose(v -> Future.all(deployVerticleList()))
         .onSuccess(res -> {
@@ -96,16 +98,29 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private Future<Void> setupConfig() {
-    return ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
+    Future<JsonObject> application = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
         .addStore(new ConfigStoreOptions()
             .setType("file")
             .setFormat("yaml")
             .setConfig(new JsonObject().put("path", "application.yml"))))
         .getConfig()
-        .compose(json -> {
-          ApplicationConfig.create(json);
-          return Future.succeededFuture(null);
-        });
+        .andThen(json -> logger.info("[setupConfig] Getting application config..."))
+        .onSuccess(ApplicationConfig::create)
+        .onFailure(e -> logger.error("Fail to get application config!", e));
+
+    Future<JsonObject> message = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
+        .addStore(new ConfigStoreOptions()
+            .setType("file")
+            .setFormat("yaml")
+            .setConfig(new JsonObject().put("path", "message.yml"))))
+        .getConfig()
+        .andThen(json -> logger.info("[setupConfig] Getting message config..."))
+        .onSuccess(MessageConfig::create)
+        .onFailure(e -> logger.error("Fail to get message config!", e));
+
+    return Future.all(application, message)
+        .onSuccess(a -> logger.info("[setupConfig] Getting all configs...DONE"))
+        .compose(v -> Future.succeededFuture(null));
   }
 
   private Future<Void> setupDatabase(String version) {
@@ -172,15 +187,16 @@ public class MainVerticle extends AbstractVerticle {
 
       if (t instanceof ValidationException ex) {
         error = ex.error;
-        body.put("code", ex.error.code).put("message", ex.message).put("errorList", ex.errorList);
+        body.put("code", ex.error.code).put("message", MessageConfig.instance().getErrorMessage(error))
+            .put("errorList", ex.errorList);
         found = true;
       } else if (t instanceof BaseException ex) {
         error = ex.error;
-        body.put("code", ex.error.code).put("message", ex.message);
+        body.put("code", ex.error.code).put("message", MessageConfig.instance().getErrorMessage(error));
         found = true;
       } else {
         error = AppError.INTERNAL_SERVER_ERROR;
-        body.put("code", error.code).put("message", error.message);
+        body.put("code", error.code).put("message", MessageConfig.instance().getErrorMessage(error));
         statusCode = 500;
       }
 

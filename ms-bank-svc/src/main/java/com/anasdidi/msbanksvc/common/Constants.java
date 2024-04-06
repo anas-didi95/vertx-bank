@@ -15,16 +15,14 @@ public final class Constants {
   }
 
   public enum AppError {
-    VALIDATE_ERROR(40001, "Validation Error!"),
-    REQUEST_BODY_EMPTY(40002, "Request Body is Empty!"),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error!");
+    VALIDATE_ERROR(40001),
+    REQUEST_BODY_EMPTY(40002),
+    INTERNAL_SERVER_ERROR(500);
 
     public final Integer code;
-    public final String message;
 
-    private AppError(int code, String message) {
+    private AppError(int code) {
       this.code = code;
-      this.message = message;
     }
   }
 }
