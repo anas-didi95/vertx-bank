@@ -23,7 +23,7 @@ import io.vertx.junit5.VertxTestContext;
 public class TestAddCustomer {
 
   @BeforeAll
-  static void beforeEach(Vertx vertx, VertxTestContext testContext) {
+  static void beforeAll(Vertx vertx, VertxTestContext testContext) {
     vertx.deployVerticle(new MainVerticle(), testContext.succeedingThenComplete());
   }
 
