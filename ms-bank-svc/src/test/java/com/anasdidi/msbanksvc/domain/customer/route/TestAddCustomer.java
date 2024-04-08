@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.anasdidi.msbanksvc.MainVerticle;
+import com.anasdidi.msbanksvc.config.ApplicationConfig;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -28,8 +29,10 @@ public class TestAddCustomer {
   }
 
   private CompletionStage<HttpClientResponse> getRequest(Vertx vertx, JsonObject body) {
+    int port = ApplicationConfig.instance().getServerPort();
+    String host = ApplicationConfig.instance().getServerHost();
     return vertx.createHttpClient()
-        .request(HttpMethod.POST, 8888, "localhost", "/cust/")
+        .request(HttpMethod.POST, port, host, "/cust/")
         .compose(req -> body != null ? req.send(body.encode()) : req.send())
         .toCompletionStage();
   }
