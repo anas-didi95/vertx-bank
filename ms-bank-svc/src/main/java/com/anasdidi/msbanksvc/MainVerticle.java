@@ -17,7 +17,7 @@ import com.anasdidi.msbanksvc.common.CommonUtils;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
 import com.anasdidi.msbanksvc.config.ApplicationProps;
-import com.anasdidi.msbanksvc.config.MessageConfig;
+import com.anasdidi.msbanksvc.config.MessageProps;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.BaseException;
 import com.anasdidi.msbanksvc.exception.ValidationException;
@@ -118,7 +118,7 @@ public class MainVerticle extends AbstractVerticle {
             .setConfig(new JsonObject().put("path", "message.yml"))))
         .getConfig()
         .andThen(json -> logger.info("[setupConfig] Getting message config..."))
-        .onSuccess(MessageConfig::create)
+        .onSuccess(MessageProps::create)
         .onFailure(e -> logger.error("Fail to get message config!", e));
 
     return Future.all(application, message)
@@ -194,16 +194,16 @@ public class MainVerticle extends AbstractVerticle {
 
       if (t instanceof ValidationException ex) {
         error = ex.error;
-        body.put("code", ex.error.code).put("message", MessageConfig.instance().getErrorMessage(error))
+        body.put("code", ex.error.code).put("message", MessageProps.instance().getErrorMessage(error))
             .put("errorList", ex.errorList);
         found = true;
       } else if (t instanceof BaseException ex) {
         error = ex.error;
-        body.put("code", ex.error.code).put("message", MessageConfig.instance().getErrorMessage(error));
+        body.put("code", ex.error.code).put("message", MessageProps.instance().getErrorMessage(error));
         found = true;
       } else {
         error = AppError.INTERNAL_SERVER_ERROR;
-        body.put("code", error.code).put("message", MessageConfig.instance().getErrorMessage(error));
+        body.put("code", error.code).put("message", MessageProps.instance().getErrorMessage(error));
         statusCode = 500;
       }
 
