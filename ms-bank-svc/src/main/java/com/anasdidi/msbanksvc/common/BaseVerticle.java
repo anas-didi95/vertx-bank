@@ -5,7 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.anasdidi.msbanksvc.config.ApplicationConfig;
+import com.anasdidi.msbanksvc.config.ApplicationProps;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -75,7 +75,7 @@ public abstract class BaseVerticle extends AbstractVerticle {
   private Pool setupDatabase() {
     return PgBuilder
         .pool()
-        .connectingTo(ApplicationConfig.instance().getPgConnectOptions())
+        .connectingTo(ApplicationProps.instance().db.pgConnectOptions)
         .using(vertx)
         .build();
   }

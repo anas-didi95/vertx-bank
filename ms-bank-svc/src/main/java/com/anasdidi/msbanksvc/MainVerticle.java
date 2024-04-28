@@ -16,7 +16,7 @@ import com.anasdidi.msbanksvc.common.BaseVerticle;
 import com.anasdidi.msbanksvc.common.CommonUtils;
 import com.anasdidi.msbanksvc.common.Constants;
 import com.anasdidi.msbanksvc.common.Constants.AppError;
-import com.anasdidi.msbanksvc.config.ApplicationConfig;
+import com.anasdidi.msbanksvc.config.ApplicationProps;
 import com.anasdidi.msbanksvc.config.MessageConfig;
 import com.anasdidi.msbanksvc.domain.customer.CustomerVerticle;
 import com.anasdidi.msbanksvc.exception.BaseException;
@@ -60,14 +60,17 @@ public class MainVerticle extends AbstractVerticle {
         .compose(version -> setupDatabase(version))
         .compose(v -> Future.all(deployVerticleList()))
         .onSuccess(res -> {
+          String host = ApplicationProps.instance().server.host;
+          int port = ApplicationProps.instance().server.port;
+
           vertx.createHttpServer().requestHandler(getRequestHandler(startPromise)).listen(
-              ApplicationConfig.instance().getServerPort(), ApplicationConfig.instance().getServerHost(), http -> {
+              port, host, http -> {
                 if (http.failed()) {
                   startPromise.fail(http.cause());
                 }
 
-                logger.info("HTTP server started on {}:{}", ApplicationConfig.instance().getServerHost(),
-                    ApplicationConfig.instance().getServerPort());
+                logger.info("HTTP server started on {}:{}", host,
+                    port);
                 startPromise.complete();
               });
         }).onFailure(res -> startPromise.fail(res));
@@ -105,7 +108,7 @@ public class MainVerticle extends AbstractVerticle {
             .setConfig(new JsonObject().put("path", "application.yml"))))
         .getConfig()
         .andThen(json -> logger.info("[setupConfig] Getting application config..."))
-        .onSuccess(ApplicationConfig::create)
+        .onSuccess(ApplicationProps::create)
         .onFailure(e -> logger.error("Fail to get application config!", e));
 
     Future<JsonObject> message = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
@@ -127,13 +130,17 @@ public class MainVerticle extends AbstractVerticle {
     return vertx.executeBlocking(() -> {
       logger.info("[setupDatabase] Running Liquibase...");
       Scope.child(Scope.Attr.resourceAccessor, new ClassLoaderResourceAccessor(), () -> {
+        String jdbcUrl = ApplicationProps.instance().db.jdbcUrl;
+        String user = ApplicationProps.instance().db.user;
+        String password = ApplicationProps.instance().db.password;
+
         try {
           logger.info("[setupDatabase] Liquibase rollback tag={}...", version);
           CommandScope rollback = new CommandScope("rollback");
           rollback.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
-          rollback.addArgumentValue("url", ApplicationConfig.instance().getJdbcUrl());
-          rollback.addArgumentValue("username", ApplicationConfig.instance().getDbUser());
-          rollback.addArgumentValue("password", ApplicationConfig.instance().getDbPassword());
+          rollback.addArgumentValue("url", jdbcUrl);
+          rollback.addArgumentValue("username", user);
+          rollback.addArgumentValue("password", password);
           rollback.addArgumentValue("tag", version);
           rollback.execute();
         } catch (CommandExecutionException ex) {
@@ -145,9 +152,9 @@ public class MainVerticle extends AbstractVerticle {
         logger.info("[setupDatabase] Liquibase update...");
         CommandScope update = new CommandScope("update");
         update.addArgumentValue("changelogFile", "/db/changelog/db.changelog-master.yml");
-        update.addArgumentValue("url", ApplicationConfig.instance().getJdbcUrl());
-        update.addArgumentValue("username", ApplicationConfig.instance().getDbUser());
-        update.addArgumentValue("password", ApplicationConfig.instance().getDbPassword());
+        update.addArgumentValue("url", jdbcUrl);
+        update.addArgumentValue("username", user);
+        update.addArgumentValue("password", password);
         update.execute();
         logger.info("[setupDatabase] Liquibase update...DONE");
       });
